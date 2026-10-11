@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>SideBySide</title>
+  <rect width="64" height="64" rx="12" fill="#1a2052"/>
+  <rect x="2" y="2" width="60" height="60" rx="11" fill="none" stroke="#d5aa22" stroke-width="2"/>
+  <text x="32" y="48" fill="#e3bc42" font-family="Georgia, 'Times New Roman', serif" font-size="43" font-weight="700" text-anchor="middle">S</text>
+</svg>

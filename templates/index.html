@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f4f8">
+  <title>{{ app_name }} | Document comparison</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="{{ url_for('index') }}" aria-label="SideBySide home"><span class="wordmark-mark">S</span>{{ app_name }}</a>
+    <span class="privacy-note"><span aria-hidden="true" class="privacy-dot"></span>Private, local processing</span>
+  </header>
+
+  <main class="layout">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">DOCUMENT COMPARISON</p>
+      <h1 id="page-title">Find the words<br>that overlap.</h1>
+      <p class="intro-copy">Compare two documents for shared passages. Files are processed locally and never sent to an external service.</p>
+    </section>
+
+    <section class="compare-panel" aria-labelledby="form-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">NEW COMPARISON</p>
+          <h2 id="form-title">Choose your documents</h2>
+        </div>
+        <span class="file-types">PDF <i></i> DOCX</span>
+      </div>
+      {% if error %}
+        <div class="alert" role="alert">{{ error }}</div>
+      {% endif %}
+      <form method="post" enctype="multipart/form-data" class="compare-form">
+        <label class="field n-field" for="word_count">
+          <span class="field-label">Number of consecutive words</span>
+          <span class="input-wrap"><input id="word_count" name="word_count" type="number" min="2" step="1" value="{{ submitted_size or 5 }}" required><span class="input-suffix">words</span></span>
+        </label>
+        <div class="upload-grid">
+          <label class="field upload-field" for="file1">
+            <span class="field-label">File 1</span>
+            <span class="upload-control"><span class="upload-icon" aria-hidden="true">＋</span><span class="upload-copy"><strong class="file-name">Choose a document</strong><small>PDF or DOCX · up to 20 MB</small></span><input id="file1" name="file1" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></span>
+          </label>
+          <label class="field upload-field" for="file2">
+            <span class="field-label">File 2</span>
+            <span class="upload-control"><span class="upload-icon" aria-hidden="true">＋</span><span class="upload-copy"><strong class="file-name">Choose a document</strong><small>PDF or DOCX · up to 20 MB</small></span><input id="file2" name="file2" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></span>
+          </label>
+        </div>
+        <button class="submit-button" type="submit">Compare documents <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+
+    {% if result %}
+      <section class="results" aria-labelledby="results-title">
+        <div class="results-heading">
+          <div><p class="eyebrow">COMPARISON COMPLETE</p><h2 id="results-title">{{ result.total_phrases }} matched passage{% if result.total_phrases != 1 %}s{% endif %}</h2></div>
+          <div class="downloads">
+            <a class="download-button" href="{{ result.download1 }}" download="{{ result.output_name1 }}"><span aria-hidden="true">↓</span> File 1 highlighted</a>
+            <a class="download-button" href="{{ result.download2 }}" download="{{ result.output_name2 }}"><span aria-hidden="true">↓</span> File 2 highlighted</a>
+          </div>
+        </div>
+        <div class="summary-grid" aria-label="Match summary">
+          <div class="summary-label">MATCH COVERAGE</div>
+          <div class="summary-metric"><span class="metric-file">FILE 1</span><strong>{{ result.matched_words1 }} <small>words</small></strong><span>{{ result.coverage1 }}% of {{ result.total_words1 }} words</span></div>
+          <div class="summary-metric"><span class="metric-file">FILE 2</span><strong>{{ result.matched_words2 }} <small>words</small></strong><span>{{ result.coverage2 }}% of {{ result.total_words2 }} words</span></div>
+        </div>
+        {% if result.matches %}
+          <div class="match-list">
+            <div class="match-list-heading"><h3>Matched passages</h3><span>{{ result.matches|length }} result{% if result.matches|length != 1 %}s{% endif %}</span></div>
+            <div class="document-headings"><span>FILE 1</span><span>FILE 2</span></div>
+            {% for match in result.matches %}
+              <article class="match-item">
+                <div class="match-phrase"><span>SHARED TEXT</span><p>{{ match.matched_text }}</p></div>
+                <div class="sentence-pair">
+                  <div class="sentence-cell"><p>{{ match.sentence1|safe }}</p>{% if match.page1 %}<small>PDF page {{ match.page1 }}</small>{% endif %}</div>
+                  <div class="sentence-cell"><p>{{ match.sentence2|safe }}</p>{% if match.page2 %}<small>PDF page {{ match.page2 }}</small>{% endif %}</div>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state"><span class="empty-icon" aria-hidden="true">✓</span><div><h3>No matching passages found</h3><p>Try a smaller word count if you want to catch shorter overlaps.</p></div></div>
+        {% endif %}
+      </section>
+    {% endif %}
+    <footer><span>{{ app_name }}</span><span>Nothing leaves your local machine.</span></footer>
+  </main>
+  <div class="loading-overlay" id="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loading-title" aria-describedby="loading-description" tabindex="-1" hidden>
+    <section class="loading-panel">
+      <p class="eyebrow">DOCUMENT COMPARISON</p>
+      <h2 id="loading-title">Comparing your documents</h2>
+      <p id="loading-description">This can take a moment for larger files.</p>
+      <div class="progress-track" role="progressbar" aria-label="Comparison in progress" aria-valuemin="0" aria-valuemax="100">
+        <span class="progress-indicator"></span>
+      </div>
+      <p class="loading-status" aria-live="polite">Reading files and checking shared passages…</p>
+    </section>
+  </div>
+  <script>
+    document.querySelectorAll('input[type="file"]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const label = input.closest('.upload-control').querySelector('.file-name');
+        label.textContent = input.files.length ? input.files[0].name : 'Choose a document';
+        input.closest('.upload-control').classList.toggle('has-file', input.files.length > 0);
+      });
+    });
+
+    const compareForm = document.querySelector('.compare-form');
+    const loadingOverlay = document.querySelector('#loading-overlay');
+    const submitButton = compareForm.querySelector('button[type="submit"]');
+    const pageHeader = document.querySelector('.topbar');
+    const mainContent = document.querySelector('main');
+
+    compareForm.addEventListener('submit', () => {
+      loadingOverlay.hidden = false;
+      pageHeader.inert = true;
+      mainContent.inert = true;
+      mainContent.setAttribute('aria-busy', 'true');
+      submitButton.disabled = true;
+      loadingOverlay.focus();
+    });
+
+    window.addEventListener('pageshow', () => {
+      loadingOverlay.hidden = true;
+      pageHeader.inert = false;
+      mainContent.inert = false;
+      mainContent.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+    });
+  </script>
+</body>
+</html>
